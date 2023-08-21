@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>TSM-Net</title>
+  <meta charset="utf-8">
+  <meta name="theme-color" content="#1A4171">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://unpkg.com/vue@3.2.20/dist/vue.global.prod.js"></script>
+  <script
+	  type="module"
+	  src="https://gradio.s3-us-west-2.amazonaws.com/3.35.2/gradio.js"
+  ></script>
+</head>
+
+<body>
+  <div id="app">
+    <div class="header">TSM-Net</div>
+    <div class="body">
+      <h1>Audio Time-Scale Modification with Temporal Compressing Networks</h1>
+      <h2>Abstract</h2>
+      <p>
+        We propose a novel approach for time-scale modification of audio signals. Unlike traditional methods that rely on the framing technique or the short-time Fourier transform to preserve the frequency during temporal stretching, our neural network model encodes the raw audio into a high-level latent representation, dubbed Neuralgram, where each vector represents 1024 audio sample points. Due to a sufficient compression ratio, we are able to apply arbitrary spatial interpolation of the Neuralgram to perform temporal stretching. Finally, a learned neural decoder synthesizes the time-scaled audio samples based on the stretched Neuralgram representation. Both the encoder and decoder are trained with latent regression losses and adversarial losses in order to obtain high-fidelity audio samples. Despite its simplicity, our method has comparable performance compared to the existing baselines and opens a new possibility in research into modern time-scale modification. Audio samples can be found on our website.
+      </p>
+  
+      <h2>Gradio app</h2>
+      <gradio-app src="https://tsmnet-mmasia23-demo.hf.space"></gradio-app>
+
+      <h2>Samples</h2>
+      <p>There are 5 audio clips and 5 different stretchers, including 3 compression ratios, for each dataset. Please go to the datasets' homepages to get more original clips.</p>
+      <ul>
+        <li><a href="https://github.com/mdeff/fma" target="_blank">FMA</a></li>
+        <li><a href="https://homes.cs.washington.edu/~thickstn/musicnet.html" target="_blank">MusicNet</a></li>
+        <li><a href="https://datashare.ed.ac.uk/handle/10283/3443" target="_blank">VCTK</a></li>
+        <li><a href="https://github.com/ernestchu/yang-ds-speech" target="_blank">Yang DS Speech</a></li>
+      </ul>
+      <p>Traditional TSM algorithms for the purpose of comparison.</p>
+      <ul>
+        <li>PV-TSM, implemented by <a href="https://librosa.org/doc/latest/generated/librosa.effects.time_stretch.html" target="_blank">librosa</a></li>
+        <li>WSOLA, implemented by <a href="https://pysox.readthedocs.io/en/latest/api.html#sox.transform.Transformer.tempo" target="_blank">SoX</a></li>
+      </ul>
+      <div v-for="d in DS">
+        <h3>{{ d }}</h3>
+        <label :for="`audio${d}`">Sample</label>
+        <select :id="`audio${d}`" v-model="audio[d]">
+          <option v-for="sample in samples[d]">{{ sample }}</option>
+        </select>
+
+        <label :for="`CR${d}`">Compression ratio / Method</label>
+        <select :id="`CR${d}`"  v-model="CR[d]">
+          <option>tsmnet</option>
+          <option>tsmnet-256x</option>
+          <option>tsmnet-512x</option>
+          <option>pvtsm</option>
+          <option>wsola</option>
+        </select>
+
+        <label :for="`showAllRate${d}`">More rates</label>
+        <input :id="`showAllRate${d}`" type="checkbox" style="transform: scale(1.5) translate(3px, -1px)"
+               v-model="showAllRate" />
+
+        <br>
+        
+        <div class="container">
+          <figure v-for="r in showAllRate ? rate : rate.filter((_, idx) => idx % 2 === 0)">
+            <figcaption>{{ r }}x</figcaption>
+            <audio :ref="d+r" controls preload="metadata">
+              <template v-if="r === '1.0'">
+                <source :src="`assets/audio/original/${d}/${audio[d]}`" type="audio/mp3">
+              </template>
+              <template v-else>
+                <source :src="`assets/audio/${CR[d]}/${r}/${d}/${audio[d]}`" type="audio/mp3">
+              </template>
+              Your browser does not support the audio element.
+            </audio>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
